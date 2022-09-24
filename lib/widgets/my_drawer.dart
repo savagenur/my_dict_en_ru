@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:my_dict_en_ru/auth/login_page.dart';
+import 'package:my_dict_en_ru/auth/welcome_page.dart';
 import 'package:my_dict_en_ru/constants/themes.dart';
 
 class MyDrawer extends StatelessWidget {
@@ -36,7 +39,10 @@ class MyDrawer extends StatelessWidget {
             ListTile(),
             Spacer(),
             GestureDetector(
-              onTap: () async => await FirebaseAuth.instance.signOut(),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Get.to(() => WelcomePage());
+              },
               child: ListTile(
                 leading: Icon(
                   Icons.logout,

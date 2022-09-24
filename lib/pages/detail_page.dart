@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:my_dict_en_ru/widgets/no_internet_icon.dart';
 
 import '../constants/themes.dart';
 import '../controllers/search_controller.dart';
@@ -19,9 +20,14 @@ class DetailPage extends StatefulWidget {
 
 class _DetailPageState extends State<DetailPage> {
   SearchController searchController = Get.find();
+
   @override
   void initState() {
+    searchController.inetCheck();
+if (searchController.hasInet) {
     searchController.getData(word: widget.word, lang: widget.lang);
+  
+}
     super.initState();
   }
 
@@ -44,182 +50,201 @@ class _DetailPageState extends State<DetailPage> {
             SliverToBoxAdapter(
               child: wordModel.def == null
                   ? Container(
-                      height: MediaQuery.of(context).size.height,
+                      height: MediaQuery.of(context).size.height * .8,
                       child: Center(
-                        child: loadingIcon,
+                        child: NoInternetIcon(),
                       ),
                     )
                   : wordModel.def!.isEmpty
                       ? Container()
-                      : StreamBuilder<List<FavoriteModel>>(
-                          stream: WordCRUD().getFavorites(),
+                      : FutureBuilder(
+                          future: controller.inetCheck(),
                           builder:
                               (BuildContext context, AsyncSnapshot snapshot) {
-                            final favorites = snapshot.data;
-                            List words = favorites == null
-                                ? []
-                                : favorites.map((e) => e.word).toList();
-                            if (snapshot.hasData) {
-                              return SingleChildScrollView(
-                                child: controller.isLoaded
-                                    ? Column(
-                                        children: [
-                                          Container(
-                                            padding: EdgeInsets.all(20),
-                                            child: Column(
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
+                            return StreamBuilder<List<FavoriteModel>>(
+                              stream: WordCRUD().getFavorites(),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot snapshot) {
+                                final favorites = snapshot.data;
+                                List words = favorites == null
+                                    ? []
+                                    : favorites.map((e) => e.word).toList();
+                                if (snapshot.hasData) {
+                                  return !controller.hasInet
+                                      ? Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              .8,
+                                          child: Center(
+                                            child: NoInternetIcon(),
+                                          ),
+                                        )
+                                      : SingleChildScrollView(
+                                          child: controller.isLoaded
+                                              ? Column(
                                                   children: [
-                                                    Text(
-                                                      wordModel.def!.isEmpty
-                                                          ? ''
-                                                          : wordModel
-                                                              .def![0].text!,
-                                                      style:
-                                                          textTheme.bodyLarge,
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(20),
+                                                      child: Column(
+                                                        children: [
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Text(
+                                                                wordModel.def!
+                                                                        .isEmpty
+                                                                    ? ''
+                                                                    : wordModel
+                                                                        .def![0]
+                                                                        .text!,
+                                                                style: textTheme
+                                                                    .bodyLarge,
+                                                              ),
+                                                              GestureDetector(
+                                                                  onTap:
+                                                                      () async {
+                                                                    if (!words.contains(wordModel
+                                                                        .def![0]
+                                                                        .text!)) {
+                                                                      WordCRUD().create(
+                                                                          word: wordModel
+                                                                              .def![
+                                                                                  0]
+                                                                              .text!,
+                                                                          lang: controller.isEnRu
+                                                                              ? 'en-ru'
+                                                                              : 'ru-en');
+                                                                    } else if (words.contains(wordModel
+                                                                        .def![0]
+                                                                        .text!)) {
+                                                                      WordCRUD().delete(wordModel
+                                                                          .def![
+                                                                              0]
+                                                                          .text!);
+                                                                    }
+                                                                  },
+                                                                  child: Icon(
+                                                                    words.contains(wordModel
+                                                                            .def![
+                                                                                0]
+                                                                            .text!)
+                                                                        ? Icons
+                                                                            .star
+                                                                        : Icons
+                                                                            .star_outline,
+                                                                    size: 30,
+                                                                  ))
+                                                            ],
+                                                          ),
+                                                          SizedBox(
+                                                            height: 10,
+                                                          ),
+                                                          Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons.volume_up,
+                                                                color: AppColors
+                                                                    .primaryColor,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 5,
+                                                              ),
+                                                              Text(
+                                                                wordModel.def!
+                                                                        .isEmpty
+                                                                    ? ''
+                                                                    : '/${wordModel.def![0].ts ?? ''}/',
+                                                                style: textTheme
+                                                                    .bodySmall!
+                                                                    .copyWith(
+                                                                        color: Colors
+                                                                            .grey),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                    GestureDetector(
-                                                        onTap: () async {
-                                                          if (!words.contains(
-                                                              wordModel.def![0]
-                                                                  .text!)) {
-                                                            WordCRUD().create(
-                                                                word: wordModel
-                                                                    .def![0]
-                                                                    .text!,
-                                                                lang: controller
-                                                                        .isEnRu
-                                                                    ? 'en-ru'
-                                                                    : 'ru-en');
-                                                          } else if (words
-                                                              .contains(
-                                                                  wordModel
-                                                                      .def![0]
-                                                                      .text!)) {
-                                                            WordCRUD().delete(
-                                                                wordModel
-                                                                    .def![0]
-                                                                    .text!);
-                                                          }
-                                                        },
-                                                        child: Icon(
-                                                          words.contains(
-                                                                  wordModel
-                                                                      .def![0]
-                                                                      .text!)
-                                                              ? Icons.star
-                                                              : Icons
-                                                                  .star_outline,
-                                                          size: 30,
-                                                        ))
-                                                  ],
-                                                ),
-                                                SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.volume_up,
-                                                      color: AppColors
-                                                          .primaryColor,
+                                                    _divider(),
+                                                    Column(
+                                                      children: List.generate(
+                                                          wordModel.def!.length,
+                                                          (index) => _type(
+                                                              textTheme,
+                                                              wordModel.def![
+                                                                  index])),
                                                     ),
                                                     SizedBox(
-                                                      width: 5,
+                                                      height: 20,
                                                     ),
-                                                    Text(
-                                                      wordModel.def!.isEmpty
-                                                          ? ''
-                                                          : '/${wordModel.def![0].ts ?? ''}/',
-                                                      style: textTheme
-                                                          .bodySmall!
-                                                          .copyWith(
-                                                              color:
-                                                                  Colors.grey),
-                                                    )
+                                                    _divider(),
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(20),
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          wordModel.def!.isEmpty
+                                                              ? Container()
+                                                              : wordModel
+                                                                          .def![
+                                                                              0]
+                                                                          .tr![
+                                                                              0]
+                                                                          .ex ==
+                                                                      null
+                                                                  ? Container()
+                                                                  : Text(
+                                                                      "Sample Sentences"),
+                                                          SizedBox(
+                                                            height: 10,
+                                                          ),
+                                                          Column(
+                                                            children:
+                                                                List.generate(
+                                                                    wordModel
+                                                                        .def!
+                                                                        .length,
+                                                                    (index) =>
+                                                                        Column(
+                                                                          children: List.generate(
+                                                                              wordModel.def![index].tr!.length,
+                                                                              (i) => wordModel.def![index].tr![i].ex == null ? Container() : _exampleTr(wordModel.def![index].tr![i], textTheme)),
+                                                                        )),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
                                                   ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          _divider(),
-                                          Column(
-                                            children: List.generate(
-                                                wordModel.def!.length,
-                                                (index) => _type(textTheme,
-                                                    wordModel.def![index])),
-                                          ),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-                                          _divider(),
-                                          Container(
-                                            padding: EdgeInsets.all(20),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                wordModel.def!.isEmpty
-                                                    ? Container()
-                                                    : wordModel.def![0].tr![0]
-                                                                .ex ==
-                                                            null
-                                                        ? Container()
-                                                        : Text(
-                                                            "Sample Sentences"),
-                                                SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Column(
-                                                  children: List.generate(
-                                                      wordModel.def!.length,
-                                                      (index) => Column(
-                                                            children: List.generate(
-                                                                wordModel
-                                                                    .def![index]
-                                                                    .tr!
-                                                                    .length,
-                                                                (i) => wordModel
-                                                                            .def![
-                                                                                index]
-                                                                            .tr![
-                                                                                i]
-                                                                            .ex ==
-                                                                        null
-                                                                    ? Container()
-                                                                    : _exampleTr(
-                                                                        wordModel
-                                                                            .def![index]
-                                                                            .tr![i],
-                                                                        textTheme)),
-                                                          )),
                                                 )
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : Container(
-                                        height:
-                                            MediaQuery.of(context).size.height,
-                                        child: Center(
-                                          child: loadingIcon,
-                                        ),
-                                      ),
-                              );
-                            } else {
-                              return Container(
-                                height: MediaQuery.of(context).size.height,
-                                child: Center(
-                                  child: loadingIcon,
-                                ),
-                              );
-                            }
+                                              : Container(
+                                                  height: MediaQuery.of(context)
+                                                      .size
+                                                      .height/1.5,
+                                                  child: Center(
+                                                    child: loadingIcon,
+                                                  ),
+                                                ),
+                                        );
+                                } else {
+                                  return Container(
+                                    height: MediaQuery.of(context).size.height,
+                                    child: Center(
+                                      child: loadingIcon,
+                                    ),
+                                  );
+                                }
+                              },
+                            );
                           },
                         ),
             )

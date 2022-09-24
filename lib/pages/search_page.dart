@@ -11,6 +11,7 @@ import 'package:my_dict_en_ru/models/favorite_model.dart';
 import 'package:my_dict_en_ru/models/word_model.dart';
 import 'package:my_dict_en_ru/services/firebase/word_crud.dart';
 import 'package:my_dict_en_ru/widgets/my_drawer.dart';
+import 'package:my_dict_en_ru/widgets/no_internet_icon.dart';
 
 class SearchPage extends StatefulWidget {
   SearchPage({Key? key}) : super(key: key);
@@ -23,6 +24,7 @@ class SearchPageState extends State<SearchPage> {
   TextEditingController queryController = TextEditingController();
   FocusNode focusNode = FocusNode();
   @override
+  @override
   void dispose() {
     queryController.dispose();
     super.dispose();
@@ -34,287 +36,327 @@ class SearchPageState extends State<SearchPage> {
     return GetBuilder<SearchController>(builder: ((controller) {
       WordModel wordModel = controller.wordModel;
 
-      return Scaffold(
-        endDrawer: MyDrawer(),
-        body: GestureDetector(
-          onPanDown: (details) {
-            FocusScope.of(context).requestFocus(FocusNode());
-          },
-          child: NestedScrollView(
-            headerSliverBuilder: ((context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  floating: true,
-                  pinned: true,
-                  centerTitle: true,
-                  title: Text("MyDictionary"),
-                  expandedHeight: 170,
-                  bottom: PreferredSize(
-                      child: Column(
-                        children: [
-                          Container(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Spacer(),
-                                Container(
-                                  alignment: Alignment.centerRight,
-                                  width: MediaQuery.of(context).size.width / 3,
-                                  child: Text(
-                                    controller.isEnRu ? "English" : "Russian",
-                                    style: TextStyle(color: AppColors.white),
-                                  ),
-                                ),
-                                Spacer(),
-                                InkWell(
-                                  onTap: () async {
-                                    controller.langSwap();
-                                    if (controller.isEnRu) {
-                                      await controller.getData(
-                                          word: queryController.text.isEmpty
-                                              ? 'success'
-                                              : queryController.text);
-                                    } else if (!controller.isEnRu) {
-                                      await controller.getData(
-                                          lang: 'ru-en',
-                                          word: queryController.text.isEmpty
-                                              ? 'успех'
-                                              : queryController.text);
-                                    }
-                                  },
-                                  child: Icon(
-                                    Icons.swap_horiz_outlined,
-                                    color: AppColors.white,
-                                  ),
-                                ),
-                                Spacer(),
-                                Container(
-                                  alignment: Alignment.centerLeft,
-                                  width: MediaQuery.of(context).size.width / 3,
-                                  child: Text(
-                                    !controller.isEnRu ? "English" : "Russian",
-                                    style: TextStyle(color: AppColors.white),
-                                  ),
-                                ),
-                                Spacer(),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 20),
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: TextFormField(
-                              focusNode: focusNode,
-                              controller: queryController,
-                              decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  suffixIcon: GestureDetector(
-                                      onTap: () {
-                                        queryController.text = '';
-                                        focusNode.requestFocus();
+      return FutureBuilder(
+        future: controller.inetCheck(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          return Scaffold(
+            endDrawer: MyDrawer(),
+            body: GestureDetector(
+              onPanDown: (details) {
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+              child: NestedScrollView(
+                headerSliverBuilder: ((context, innerBoxIsScrolled) {
+                  return [
+                    SliverAppBar(
+                      floating: true,
+                      pinned: true,
+                      centerTitle: true,
+                      title: Text("MyDictionary"),
+                      expandedHeight: 170,
+                      bottom: PreferredSize(
+                          child: Column(
+                            children: [
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Spacer(),
+                                    Container(
+                                      alignment: Alignment.centerRight,
+                                      width:
+                                          MediaQuery.of(context).size.width / 3,
+                                      child: Text(
+                                        controller.isEnRu
+                                            ? "English"
+                                            : "Russian",
+                                        style:
+                                            TextStyle(color: AppColors.white),
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    InkWell(
+                                      onTap: () async {
+                                        controller.langSwap();
+                                        if (controller.isEnRu) {
+                                          controller.loaded(false);
+                                          await controller.getData(
+                                              word: queryController.text.isEmpty
+                                                  ? 'success'
+                                                  : queryController.text);
+                                          controller.loaded(true);
+                                        } else if (!controller.isEnRu) {
+                                          controller.loaded(false);
+                                          await controller.getData(
+                                              lang: 'ru-en',
+                                              word: queryController.text.isEmpty
+                                                  ? 'успех'
+                                                  : queryController.text);
+                                          controller.loaded(true);
+                                        }
                                       },
                                       child: Icon(
-                                        Icons.clear,
-                                        color: AppColors.primaryColor,
-                                      ))),
-                              onFieldSubmitted: (text) async {
-                                if (controller.isEnRu) {
-                                  await controller.getData(
-                                      word: queryController.text);
-                                } else if (!controller.isEnRu) {
-                                  await controller.getData(
-                                      lang: 'ru-en',
-                                      word: queryController.text);
-                                }
-                              },
-                            ),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: AppColors.greyColor),
+                                        Icons.swap_horiz_outlined,
+                                        color: AppColors.white,
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    Container(
+                                      alignment: Alignment.centerLeft,
+                                      width:
+                                          MediaQuery.of(context).size.width / 3,
+                                      child: Text(
+                                        !controller.isEnRu
+                                            ? "English"
+                                            : "Russian",
+                                        style:
+                                            TextStyle(color: AppColors.white),
+                                      ),
+                                    ),
+                                    Spacer(),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 20),
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: TextFormField(
+                                  focusNode: focusNode,
+                                  controller: queryController,
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      suffixIcon: GestureDetector(
+                                          onTap: () {
+                                            queryController.text = '';
+                                            focusNode.requestFocus();
+                                          },
+                                          child: Icon(
+                                            Icons.clear,
+                                            color: AppColors.primaryColor,
+                                          ))),
+                                  onFieldSubmitted: (text) async {
+                                    if (controller.hasInet) {
+                                      if (controller.isEnRu) {
+                                        controller.loaded(false);
+                                        await controller.getData(
+                                            word: queryController.text);
+                                        controller.loaded(true);
+                                      } else if (!controller.isEnRu) {
+                                        controller.loaded(false);
+                                        await controller.getData(
+                                            lang: 'ru-en',
+                                            word: queryController.text);
+                                        controller.loaded(true);
+                                      }
+                                    }
+                                  },
+                                ),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: AppColors.greyColor),
+                              )
+                            ],
+                          ),
+                          preferredSize: Size.fromHeight(120)),
+                    )
+                  ];
+                }),
+                body: wordModel.def == null
+                    ? !controller.hasInet
+                        ? NoInternetIcon()
+                        : Container()
+                    : wordModel.def!.isEmpty
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset("assets/not-found.png",
+                                  width: 200, color: AppColors.primaryColor)
+                            ],
                           )
-                        ],
-                      ),
-                      preferredSize: Size.fromHeight(120)),
-                )
-              ];
-            }),
-            body: wordModel.def == null
-                ? Container(
-                    height: MediaQuery.of(context).size.height,
-                    child: Center(
-                      child: loadingIcon,
-                    ),
-                  )
-                : wordModel.def!.isEmpty
-                    ? Container()
-                    : StreamBuilder<List<FavoriteModel>>(
-                        stream: WordCRUD().getFavorites(),
-                        builder:
-                            (BuildContext context, AsyncSnapshot snapshot) {
-                          final favorites = snapshot.data;
-                          List words = favorites == null
-                              ? []
-                              : favorites.map((e) => e.word).toList();
-                          if (snapshot.hasData) {
-                            return SingleChildScrollView(
-                              child: controller.isLoaded
-                                  ? Column(
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.all(20),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    wordModel.def!.isEmpty
-                                                        ? ''
-                                                        : wordModel
-                                                            .def![0].text!,
-                                                    style: textTheme.bodyLarge,
-                                                  ),
-                                                  GestureDetector(
-                                                      onTap: () async {
-                                                        if (!words.contains(
-                                                            wordModel.def![0]
-                                                                .text!)) {
-                                                          WordCRUD().create(
-                                                              word: wordModel
-                                                                  .def![0]
-                                                                  .text!,
-                                                              lang: controller
-                                                                      .isEnRu
-                                                                  ? 'en-ru'
-                                                                  : 'ru-en');
-                                                        } else if (words
-                                                            .contains(wordModel
-                                                                .def![0]
-                                                                .text!)) {
-                                                          WordCRUD().delete(
-                                                              wordModel.def![0]
-                                                                  .text!);
-                                                        }
-                                                      },
-                                                      child: Icon(
-                                                        words.contains(wordModel
-                                                                .def![0].text!)
-                                                            ? Icons.star
-                                                            : Icons
-                                                                .star_outline,
-                                                        size: 30,
-                                                      ))
-                                                ],
-                                              ),
-                                              SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.volume_up,
-                                                    color:
-                                                        AppColors.primaryColor,
-                                                  ),
-                                                  SizedBox(
-                                                    width: 5,
-                                                  ),
-                                                  Text(
-                                                    wordModel.def!.isEmpty
-                                                        ? ''
-                                                        : '/${wordModel.def![0].ts ?? ''}/',
-                                                    style: textTheme.bodySmall!
-                                                        .copyWith(
-                                                            color: Colors.grey),
-                                                  )
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        _divider(),
-                                        Column(
-                                          children: List.generate(
-                                              wordModel.def!.length,
-                                              (index) => _type(textTheme,
-                                                  wordModel.def![index])),
-                                        ),
-                                        SizedBox(
-                                          height: 20,
-                                        ),
-                                        _divider(),
-                                        Container(
-                                          padding: EdgeInsets.all(20),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              wordModel.def!.isEmpty
-                                                  ? Container()
-                                                  : wordModel.def![0].tr![0]
-                                                              .ex ==
-                                                          null
-                                                      ? Container()
-                                                      : Text(
-                                                          "Sample Sentences"),
-                                              SizedBox(
-                                                height: 10,
-                                              ),
-                                              Column(
-                                                children: List.generate(
-                                                    wordModel.def!.length,
-                                                    (index) => Column(
-                                                          children: List.generate(
-                                                              wordModel
-                                                                  .def![index]
-                                                                  .tr!
-                                                                  .length,
-                                                              (i) => wordModel
+                        : controller.hasInet
+                            ? StreamBuilder<List<FavoriteModel>>(
+                                stream: WordCRUD().getFavorites(),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot snapshot) {
+                                  final favorites = snapshot.data;
+                                  List words = favorites == null
+                                      ? []
+                                      : favorites.map((e) => e.word).toList();
+                                  if (snapshot.hasData) {
+                                    return SingleChildScrollView(
+                                      child: controller.isLoaded
+                                          ? Column(
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.all(20),
+                                                  child: Column(
+                                                    children: [
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            wordModel.def!
+                                                                    .isEmpty
+                                                                ? ''
+                                                                : wordModel
+                                                                    .def![0]
+                                                                    .text!,
+                                                            style: textTheme
+                                                                .bodyLarge,
+                                                          ),
+                                                          GestureDetector(
+                                                              onTap: () async {
+                                                                if (!words.contains(
+                                                                    wordModel
+                                                                        .def![0]
+                                                                        .text!)) {
+                                                                  WordCRUD().create(
+                                                                      word: wordModel
                                                                           .def![
-                                                                              index]
-                                                                          .tr![
-                                                                              i]
-                                                                          .ex ==
-                                                                      null
-                                                                  ? Container()
-                                                                  : _exampleTr(
+                                                                              0]
+                                                                          .text!,
+                                                                      lang: controller
+                                                                              .isEnRu
+                                                                          ? 'en-ru'
+                                                                          : 'ru-en');
+                                                                } else if (words
+                                                                    .contains(wordModel
+                                                                        .def![0]
+                                                                        .text!)) {
+                                                                  WordCRUD().delete(
+                                                                      wordModel
+                                                                          .def![
+                                                                              0]
+                                                                          .text!);
+                                                                }
+                                                              },
+                                                              child: Icon(
+                                                                words.contains(wordModel
+                                                                        .def![0]
+                                                                        .text!)
+                                                                    ? Icons.star
+                                                                    : Icons
+                                                                        .star_outline,
+                                                                size: 30,
+                                                              ))
+                                                        ],
+                                                      ),
+                                                      SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.volume_up,
+                                                            color: AppColors
+                                                                .primaryColor,
+                                                          ),
+                                                          SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text(
+                                                            wordModel.def!
+                                                                    .isEmpty
+                                                                ? ''
+                                                                : '/${wordModel.def![0].ts ?? ''}/',
+                                                            style: textTheme
+                                                                .bodySmall!
+                                                                .copyWith(
+                                                                    color: Colors
+                                                                        .grey),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                _divider(),
+                                                Column(
+                                                  children: List.generate(
+                                                      wordModel.def!.length,
+                                                      (index) => _type(
+                                                          textTheme,
+                                                          wordModel
+                                                              .def![index])),
+                                                ),
+                                                SizedBox(
+                                                  height: 20,
+                                                ),
+                                                _divider(),
+                                                Container(
+                                                  padding: EdgeInsets.all(20),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      wordModel.def!.isEmpty
+                                                          ? Container()
+                                                          : wordModel
+                                                                      .def![0]
+                                                                      .tr![0]
+                                                                      .ex ==
+                                                                  null
+                                                              ? Container()
+                                                              : Text(
+                                                                  "Sample Sentences"),
+                                                      SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Column(
+                                                        children: List.generate(
+                                                            wordModel
+                                                                .def!.length,
+                                                            (index) => Column(
+                                                                  children: List.generate(
                                                                       wordModel
                                                                           .def![
                                                                               index]
-                                                                          .tr![i],
-                                                                      textTheme)),
-                                                        )),
-                                              )
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Container(
+                                                                          .tr!
+                                                                          .length,
+                                                                      (i) => wordModel.def![index].tr![i].ex ==
+                                                                              null
+                                                                          ? Container()
+                                                                          : _exampleTr(
+                                                                              wordModel.def![index].tr![i],
+                                                                              textTheme)),
+                                                                )),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Container(
+                                              height: MediaQuery.of(context)
+                                                  .size
+                                                  .height/1.5,
+                                              child: Center(
+                                                child: loadingIcon,
+                                              ),
+                                            ),
+                                    );
+                                  } else {
+                                    return Container(
                                       height:
-                                          MediaQuery.of(context).size.height,
+                                          MediaQuery.of(context).size.height/1.5,
                                       child: Center(
                                         child: loadingIcon,
                                       ),
-                                    ),
-                            );
-                          } else {
-                            return Container(
-                              height: MediaQuery.of(context).size.height,
-                              child: Center(
-                                child: loadingIcon,
-                              ),
-                            );
-                          }
-                        },
-                      ),
-          ),
-        ),
+                                    );
+                                  }
+                                },
+                              )
+                            : NoInternetIcon(),
+              ),
+            ),
+          );
+        },
       );
     }));
   }

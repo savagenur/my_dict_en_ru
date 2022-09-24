@@ -44,7 +44,7 @@ class WordCRUD {
   }
 
    Stream<List<FavoriteModel>> getFavorites() {
-    String user = FirebaseAuth.instance.currentUser!.uid;
+    String? user = FirebaseAuth.instance.currentUser?.uid;
 
     Stream<List<FavoriteModel>> data = FirebaseFirestore.instance
         .collection('users')
@@ -55,7 +55,7 @@ class WordCRUD {
         .map((snapshot) => snapshot.docs
             .map((doc) => FavoriteModel.fromJson(doc.data()))
             .toList());
-    ;
+    
     return data;
   }
 }

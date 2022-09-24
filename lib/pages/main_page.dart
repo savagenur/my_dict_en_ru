@@ -3,6 +3,8 @@ import 'package:my_dict_en_ru/pages/favorites_page.dart';
 import 'package:my_dict_en_ru/pages/home_page.dart';
 import 'package:my_dict_en_ru/pages/search_page.dart';
 
+import '../controllers/search_controller.dart';
+
 class MainPage extends StatefulWidget {
   MainPage({Key? key}) : super(key: key);
 
@@ -25,6 +27,10 @@ class _MainPageState extends State<MainPage>
   int _currentIndex = 0;
   @override
   void initState() {
+    void initState() {
+    SearchController().getData();
+    super.initState();
+  }
     tabController = TabController(length: pages.length, vsync: this,initialIndex: 0);
     super.initState();
   }

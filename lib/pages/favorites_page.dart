@@ -20,52 +20,54 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      endDrawer: MyDrawer(),
-      
+        endDrawer: MyDrawer(),
         body: CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          floating: true,
-          centerTitle: true,
-          title: Text("MyDictionary"),
-        ),
-        SliverToBoxAdapter(
-          child: StreamBuilder<List<FavoriteModel>>(
-            stream: WordCRUD().getFavorites(),
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              if (snapshot.hasData) {
-                final List<FavoriteModel> data = snapshot.data;
-                List<String> favorites = data.map((e) => e.word!).toList();
-                return Container(
-                  margin: EdgeInsets.all(20),
-                  child: Column(
-                    children: List.generate(
-                        favorites.length,
-                        (index) =>
-                            _wordItem(favorites[index], index, data[index])),
-                  ),
-                );
-              } else if (snapshot.hasError) {
-                return Center(
-                  child: Text(snapshot.error.toString()),
-                );
-              } else {
-                return Container(
-                  height: MediaQuery.of(context).size.height,
-                  child: Center(child: loadingIcon),
-                );
-              }
-            },
-          ),
-        ),
-      ],
-    ));
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              centerTitle: true,
+              title: Text("MyDictionary"),
+            ),
+            SliverToBoxAdapter(
+              child: StreamBuilder<List<FavoriteModel>>(
+                stream: WordCRUD().getFavorites(),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  if (snapshot.hasData) {
+                    final List<FavoriteModel> data = snapshot.data;
+                    List<String> favorites = data.map((e) => e.word!).toList();
+                    return Container(
+                      margin: EdgeInsets.all(20),
+                      child: Column(
+                        children: List.generate(
+                            favorites.length,
+                            (index) => _wordItem(
+                                favorites[index], index, data[index])),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text(snapshot.error.toString()),
+                    );
+                  } else {
+                    return Container(
+                      height: MediaQuery.of(context).size.height,
+                      child: Center(child: loadingIcon),
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ));
   }
 
   InkWell _wordItem(String word, int index, FavoriteModel data) {
     return InkWell(
-      onTap: (() => Get.to(() => DetailPage(word: word, lang: data.lang!),
-          transition: Transition.rightToLeft)),
+      onTap: (() {
+        Get.find<SearchController>().loaded(false);
+        Get.to(() => DetailPage(word: word, lang: data.lang!),
+            transition: Transition.rightToLeft);
+      }),
       child: Container(
         alignment: Alignment.centerLeft,
         padding: EdgeInsets.all(10),
