@@ -8,7 +8,7 @@
 PRODUCT_NAME = SavageDict En-Ru;
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.savagenur.savagedict-en-ru;
+PRODUCT_BUNDLE_IDENTIFIER = com.savagenur.my_dict_en_ru;
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2022 com.example. All rights reserved.
